@@ -1,0 +1,8 @@
+tensorflow[and-cuda]
+streamlit
+numpy
+opencv-python-headless
+tensorflow-cpu
+pillow
+h5py
+reportlab

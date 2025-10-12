@@ -1,0 +1,17 @@
+# Ignore virtual environment
+mmdpro/
+
+# Ignore models folder
+models/
+
+# Ignore dataset folder
+data/
+
+# Ignore generated reports
+reports/
+
+# Ignore temporary or system files
+*.tmp
+*.log
+__pycache__/
+.ipynb_checkpoints/
