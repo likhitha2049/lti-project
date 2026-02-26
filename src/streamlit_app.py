@@ -41,18 +41,22 @@ MODEL_URLS = {
 
 # --- Download missing models automatically ---
 def ensure_models_present():
+    """Download missing models and return a list of (level, message) tuples for UI display.
+    Level is one of: 'info','success','error','warning'.
+    """
+    logs = []
     for name, url in MODEL_URLS.items():
         local_path = os.path.join(MODELS_DIR, f"{name}_specialist.keras") if name != "router" else os.path.join(MODELS_DIR, "router.keras")
         if not os.path.exists(local_path):
-            st.warning(f"Downloading {name} model from Hugging Face… (only once)")
+            logs.append(('info', f"Downloading {name} model from Hugging Face… (only once)"))
             try:
                 urllib.request.urlretrieve(url, local_path)
-                st.success(f"{name.capitalize()} model downloaded successfully.")
+                logs.append(('success', f"{name.capitalize()} model downloaded successfully."))
             except Exception as e:
-                st.error(f"Failed to download {name} model: {e}")
+                logs.append(('error', f"Failed to download {name} model: {e}"))
+                # raise after collecting the error so caller can decide how to show it
                 raise e
-
-ensure_models_present()
+    return logs
 
 # --- Page Configuration ---
 st.set_page_config(page_title="Multi-Disease Classification", page_icon="🩺", layout="centered")
@@ -79,6 +83,27 @@ def load_all_models():
         'skin': load_model(os.path.join(MODELS_DIR, 'skin_specialist.keras'))
     }
     return models
+
+# Ensure models are present, but show messages inside a collapsed expander so they don't occupy the top of the page
+try:
+    download_logs = ensure_models_present()
+except Exception as e:
+    # If downloads failed, show an error expander so the user can expand to inspect
+    with st.expander("Model download logs (click to view)", expanded=True):
+        st.error(f"Model download failed: {e}")
+    raise
+
+if download_logs:
+    with st.expander("Model download logs (click to view)", expanded=False):
+        for level, msg in download_logs:
+            if level == 'info':
+                st.info(msg)
+            elif level == 'success':
+                st.success(msg)
+            elif level == 'warning':
+                st.warning(msg)
+            elif level == 'error':
+                st.error(msg)
 
 # --- Class Labels ---
 ROUTER_CLASSES = sorted(['brain', 'chest', 'skin'])
